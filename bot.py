@@ -23,6 +23,16 @@ def speichern(verlauf):
         json.dump(verlauf, f, ensure_ascii=False, indent=2)
     return None
 
+def hilfe_anzeigen():
+    """Alle Befehle anzeigen."""
+    print("📋 Befehle:")
+    print("  /hilfe   - diese Hilfe anzeigen")
+    print("  /neu     - Gedächtnis löschen")
+    print("  /verlauf - Anzahl gespeicherter Nachrichten")
+    print("  exit     - RashiBot beenden")
+
+
+
 verlauf = laden()
 print("RashiBot ist bereit! Tippe 'exit' zum Beenden.")
 
@@ -32,6 +42,23 @@ while True:
     if frage.lower() == "exit":
         print("Bot: Tschüss Rashid! 👋")
         break
+    if frage.lower() == "/hilfe":
+        hilfe_anzeigen()
+        continue
+    if frage.lower() == "/neu":
+        verlauf = [{"role": "system", "content": CHARAKTER}]
+        speichern(verlauf)
+        print("Bot: 🧹 Gedächtnis gelöscht. Wir fangen neu an!")
+        continue
+    if frage.lower() == "/verlauf":
+        anzahl = len(verlauf) - 1  # ohne den System-Prompt
+        print(f"Bot: 💬 Ich habe {anzahl} Nachrichten gespeichert.")
+        continue
+    if frage.startswith("/"):  # unbekannter Befehl
+        print("Bot: ❓ Unbekannter Befehl. Tippe /hilfe.")
+        continue
+    if frage.strip() == "":  # leere Eingabe ignorieren
+        continue
 
     # Deine Frage ins Gedächtnis schreiben
     verlauf.append({"role": "user", "content": frage})
