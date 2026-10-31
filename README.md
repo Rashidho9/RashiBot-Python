@@ -22,8 +22,8 @@ Keine Cloud, keine Kosten, die Daten bleiben auf dem eigenen PC.
    ```
 3. Projekt klonen und Pakete installieren:
    ```
-   git clone https://github.com/DEIN-NAME/RashiBot.git
-   cd RashiBot
+   git clone https://github.com/Rashidho9/RashiBot-Python.git
+   cd RashiBot-Python
    python -m venv .venv
    .venv\Scripts\activate
    pip install -r requirements.txt
@@ -73,3 +73,4 @@ Python 3 · tkinter · requests · pypdf · pytest · Ollama · Git/GitHub
 
 ## 👤 Autor
 Rashid Hosseini, Umschulung Fachinformatiker Anwendungsentwicklung (IAL)
+GitHub: [Rashidho9](https://github.com/Rashidho9)
