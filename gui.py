@@ -1,10 +1,11 @@
 """Grafische Oberfläche für RashiBot."""
 import threading
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import filedialog, scrolledtext
 
 from gedaechtnis import Gedaechtnis
 from ki_client import KiClient
+from pdf_wissen import PdfWissen
 
 
 class RashiBotGUI:
@@ -12,6 +13,7 @@ class RashiBotGUI:
         self.fenster = fenster
         self.gedaechtnis = Gedaechtnis()
         self.ki = KiClient()
+        self.wissen = PdfWissen()
 
         fenster.title("🤖 RashiBot")
         fenster.geometry("700x550")
@@ -35,18 +37,20 @@ class RashiBotGUI:
         self.senden_btn.pack(side=tk.LEFT, padx=5)
 
         tk.Button(unten, text="🧹 Neu", command=self.neu).pack(side=tk.LEFT)
+        tk.Button(unten, text="📄 PDF", command=self.pdf_laden).pack(side=tk.LEFT, padx=5)
 
-        self.verlauf_anzeigen()  # NEU: alten Verlauf beim Start zeigen
+        self.verlauf_anzeigen()
 
+    # ---------- Anzeige ----------
     def schreiben(self, text):
         """Text unten im Chat anhängen."""
         self.chat.configure(state="normal")
         self.chat.insert(tk.END, text)
-        self.chat.see(tk.END)  # automatisch nach unten scrollen
+        self.chat.see(tk.END)
         self.chat.configure(state="disabled")
 
     def verlauf_anzeigen(self):
-        """Gespeicherten Verlauf aus dem Gedächtnis ins Fenster schreiben."""
+        """Gespeicherten Verlauf beim Start ins Fenster schreiben."""
         for nachricht in self.gedaechtnis.verlauf:
             if nachricht["role"] == "user":
                 self.schreiben(f"Du: {nachricht['content']}\n")
@@ -55,8 +59,9 @@ class RashiBotGUI:
         self.schreiben(f"Bot: Hallo Rashid! Modell: {self.ki.modell}. "
                        "Tippe /hilfe für Befehle.\n\n")
 
+    # ---------- Befehle ----------
     def befehl_ausfuehren(self, befehl):
-        """Befehle wie im Terminal. Gibt True zurück, wenn es ein Befehl war."""
+        """Befehle wie im Terminal."""
         b = befehl.lower()
         if b == "/hilfe":
             self.schreiben(
@@ -65,12 +70,18 @@ class RashiBotGUI:
                 "  /neu          - Gedächtnis löschen\n"
                 "  /verlauf      - Anzahl Nachrichten\n"
                 "  /modelle      - installierte Modelle\n"
-                "  /modell NAME  - Modell wechseln\n\n"
+                "  /modell NAME  - Modell wechseln\n"
+                "  /pdfs         - geladene PDFs anzeigen\n\n"
             )
         elif b == "/neu":
             self.neu()
         elif b == "/verlauf":
             self.schreiben(f"Bot: 💬 {self.gedaechtnis.anzahl()} Nachrichten gespeichert.\n\n")
+        elif b == "/pdfs":
+            if self.wissen.dateien:
+                self.schreiben("Bot: 📚 " + ", ".join(self.wissen.dateien) + "\n\n")
+            else:
+                self.schreiben("Bot: Noch keine PDF geladen.\n\n")
         elif b == "/modelle":
             try:
                 for name in self.ki.modelle_auflisten():
@@ -91,15 +102,15 @@ class RashiBotGUI:
                 self.schreiben("Bot: ⚠️ Ollama läuft nicht.\n\n")
         else:
             self.schreiben("Bot: ❓ Unbekannter Befehl. Tippe /hilfe.\n\n")
-        return True
 
+    # ---------- Senden ----------
     def senden(self):
         frage = self.eingabe.get().strip()
         if not frage:
             return
         self.eingabe.delete(0, tk.END)
 
-        if frage.startswith("/"):  # NEU: Befehle abfangen
+        if frage.startswith("/"):
             self.schreiben(f"Du: {frage}\n")
             self.befehl_ausfuehren(frage)
             return
@@ -110,12 +121,28 @@ class RashiBotGUI:
         threading.Thread(target=self._ki_fragen, daemon=True).start()
 
     def _ki_fragen(self):
+        """Läuft im Hintergrund-Thread."""
         try:
+            nachrichten = list(self.gedaechtnis.verlauf)  # Kopie!
+            frage = nachrichten[-1]["content"]
+            treffer = self.wissen.suchen(frage)
+            if treffer:
+                kontext = "\n\n".join(f"[{name}]\n{text}" for _, name, text in treffer)
+                nachrichten[-1] = {
+                    "role": "user",
+                    "content": (
+                        "Beantworte die Frage NUR mit diesen Auszügen aus meinen PDFs. "
+                        "Wenn die Antwort nicht drinsteht, sag das ehrlich.\n\n"
+                        f"{kontext}\n\nFrage: {frage}"
+                    ),
+                }
             text = self.ki.frage_streamen(
-                self.gedaechtnis.verlauf,
-                # Fenster nur im Haupt-Thread ändern, darum after()
+                nachrichten,
                 bei_wort=lambda w: self.fenster.after(0, self.schreiben, w),
             )
+            if treffer:
+                quellen = ", ".join(sorted({name for _, name, _ in treffer}))
+                self.fenster.after(0, self.schreiben, f"\n📚 Quelle: {quellen}")
             self.gedaechtnis.hinzufuegen("assistant", text)
             self.gedaechtnis.speichern()
         except Exception as fehler:
@@ -127,12 +154,25 @@ class RashiBotGUI:
         self.schreiben("\n\n")
         self.senden_btn.configure(state="normal")
 
+    # ---------- Buttons ----------
     def neu(self):
         self.gedaechtnis.leeren()
         self.schreiben("Bot: 🧹 Gedächtnis gelöscht.\n\n")
+
+    def pdf_laden(self):
+        """Dateidialog öffnen und PDF einlesen."""
+        pfad = filedialog.askopenfilename(filetypes=[("PDF-Dateien", "*.pdf")])
+        if not pfad:
+            return
+        try:
+            seiten = self.wissen.laden(pfad)
+            self.schreiben(f"Bot: 📄 PDF geladen ({seiten} Seiten). "
+                           "Stell mir Fragen dazu!\n\n")
+        except Exception as fehler:
+            self.schreiben(f"Bot: ⚠️ PDF konnte nicht gelesen werden: {fehler}\n\n")
 
 
 if __name__ == "__main__":
     fenster = tk.Tk()
     RashiBotGUI(fenster)
-    fenster.mainloop()  # Fenster offen halten und auf Klicks warten
+    fenster.mainloop()
