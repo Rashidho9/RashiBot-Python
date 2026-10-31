@@ -5,7 +5,6 @@ import requests
 
 from config import MODELL, OLLAMA_URL
 
-
 class KiClient:
     def __init__(self):
         """Konstruktor: aktuelles Modell im Objekt merken."""

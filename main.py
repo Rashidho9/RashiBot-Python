@@ -93,6 +93,5 @@ def main():
         gedaechtnis.hinzufuegen("assistant", text)
         gedaechtnis.speichern()
 
-
 if __name__ == "__main__":  # nur starten, wenn diese Datei ausgeführt wird
     main()
