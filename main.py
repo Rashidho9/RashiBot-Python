@@ -1,16 +1,65 @@
-# This is a sample Python script.
+"""Startpunkt von RashiBot."""
+import requests
 
-# Press Strg+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
+from gedaechtnis import Gedaechtnis
+from ki_client import KiClient
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def hilfe_anzeigen():
+    print("📋 Befehle:")
+    print("  /hilfe   - diese Hilfe anzeigen")
+    print("  /neu     - Gedächtnis löschen")
+    print("  /verlauf - Anzahl gespeicherter Nachrichten")
+    print("  exit     - RashiBot beenden")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+def main():
+    gedaechtnis = Gedaechtnis()  # Objekt erzeugen (wie new in Java)
+    ki = KiClient()
+    print("RashiBot ist bereit! Tippe /hilfe für alle Befehle.")
+
+    while True:
+        frage = input("Du: ").strip()
+
+        if frage == "":
+            continue
+        if frage.lower() == "exit":
+            print("Bot: Tschüss Rashid! 👋")
+            break
+        if frage.lower() == "/hilfe":
+            hilfe_anzeigen()
+            continue
+        if frage.lower() == "/neu":
+            gedaechtnis.leeren()
+            print("Bot: 🧹 Gedächtnis gelöscht.")
+            continue
+        if frage.lower() == "/verlauf":
+            print(f"Bot: 💬 {gedaechtnis.anzahl()} Nachrichten gespeichert.")
+            continue
+        if frage.startswith("/"):
+            print("Bot: ❓ Unbekannter Befehl. Tippe /hilfe.")
+            continue
+
+        gedaechtnis.hinzufuegen("user", frage)
+        try:
+            text = ki.frage_stellen(gedaechtnis.verlauf)
+        except requests.exceptions.ConnectionError:
+            print("Bot: ⚠️ Ollama läuft nicht.")
+            gedaechtnis.letzte_entfernen()
+            continue
+        except requests.exceptions.Timeout:
+            print("Bot: ⏳ Zu lange gedauert.")
+            gedaechtnis.letzte_entfernen()
+            continue
+        except Exception as fehler:
+            print("Bot: ❌ Fehler:", fehler)
+            gedaechtnis.letzte_entfernen()
+            continue
+
+        print("Bot:", text)
+        gedaechtnis.hinzufuegen("assistant", text)
+        gedaechtnis.speichern()
+
+
+if __name__ == "__main__":  # nur starten, wenn diese Datei ausgeführt wird
+    main()
