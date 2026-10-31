@@ -7,11 +7,21 @@ from config import MODELL, OLLAMA_URL
 
 
 class KiClient:
+    def __init__(self):
+        """Konstruktor: aktuelles Modell im Objekt merken."""
+        self.modell = MODELL
+
+    def modelle_auflisten(self):
+        """Fragt Ollama nach allen installierten Modellen."""
+        antwort = requests.get("http://localhost:11434/api/tags", timeout=10)
+        antwort.raise_for_status()
+        return [m["name"] for m in antwort.json()["models"]]
+
     def frage_stellen(self, verlauf):
-        """Schickt den Verlauf an Ollama und gibt die ganze Antwort zurück."""
+        """Schickt den Verlauf und gibt die ganze Antwort zurück."""
         antwort = requests.post(
             OLLAMA_URL,
-            json={"model": MODELL, "messages": verlauf, "stream": False},
+            json={"model": self.modell, "messages": verlauf, "stream": False},
             timeout=120,
         )
         antwort.raise_for_status()
@@ -21,7 +31,7 @@ class KiClient:
         """Schickt den Verlauf und gibt die Antwort Stück für Stück aus."""
         antwort = requests.post(
             OLLAMA_URL,
-            json={"model": MODELL, "messages": verlauf, "stream": True},
+            json={"model": self.modell, "messages": verlauf, "stream": True},
             stream=True,
             timeout=120,
         )
