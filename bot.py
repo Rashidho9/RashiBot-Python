@@ -1,14 +1,29 @@
+import json  # NEU: Listen/Wörterbücher als Datei speichern
+import os    # NEU: prüfen, ob eine Datei existiert
 import requests  # Bibliothek für Netzwerk-Anfragen
 
 MODELL = "llama3.2:1b"
+DATEI = "gedaechtnis.json"  # NEU: Name der Gedächtnis-Datei
 CHARAKTER = (
     "Du bist RashiBot, ein freundlicher Assistent von Rashid. "
     "Antworte immer auf Deutsch, kurz und einfach."
 )
 
-# NEU: das Gedächtnis, eine Liste von Nachrichten
-verlauf = [{"role": "system", "content": CHARAKTER}]
+def laden():
+    """Gedächtnis aus der Datei laden, sonst neu anfangen."""
+    if os.path.exists(DATEI):
+        with open(DATEI, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return [{"role": "system", "content": CHARAKTER}]
 
+
+def speichern(verlauf):
+    """Gedächtnis in die Datei schreiben."""
+    with open(DATEI, "w", encoding="utf-8") as f:
+        json.dump(verlauf, f, ensure_ascii=False, indent=2)
+    return None
+
+verlauf = laden()
 print("RashiBot ist bereit! Tippe 'exit' zum Beenden.")
 
 while True:
@@ -30,3 +45,4 @@ while True:
 
     # Antwort des Bots auch merken
     verlauf.append({"role": "assistant", "content": text})
+    speichern(verlauf)
