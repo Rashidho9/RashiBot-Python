@@ -1,6 +1,6 @@
 import requests  # Bibliothek für Netzwerk-Anfragen
 
-print("RashiBot ist bereit! Tippe 'exit' zum Beenden.")
+print("RashiBot(v2) ist bereit! Tippe 'exit' zum Beenden.")
 
 while True:  # Endlosschleife: läuft, bis wir 'break' sagen
     frage = input("Du: ")
