@@ -1,11 +1,13 @@
 import requests  # Bibliothek für Netzwerk-Anfragen
 
-# Konstanten: feste Werte schreibt man GROSS
 MODELL = "llama3.2:1b"
 CHARAKTER = (
     "Du bist RashiBot, ein freundlicher Assistent von Rashid. "
     "Antworte immer auf Deutsch, kurz und einfach."
 )
+
+# NEU: das Gedächtnis, eine Liste von Nachrichten
+verlauf = [{"role": "system", "content": CHARAKTER}]
 
 print("RashiBot ist bereit! Tippe 'exit' zum Beenden.")
 
@@ -16,13 +18,15 @@ while True:
         print("Bot: Tschüss Rashid! 👋")
         break
 
+    # Deine Frage ins Gedächtnis schreiben
+    verlauf.append({"role": "user", "content": frage})
+
     antwort = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": MODELL,
-            "system": CHARAKTER,  # NEU: der Charakter des Bots
-            "prompt": frage,
-            "stream": False,
-        },
+        "http://localhost:11434/api/chat",  # NEU: chat statt generate
+        json={"model": MODELL, "messages": verlauf, "stream": False},
     )
-    print("Bot:", antwort.json()["response"])
+    text = antwort.json()["message"]["content"]  # NEU: anderer Pfad
+    print("Bot:", text)
+
+    # Antwort des Bots auch merken
+    verlauf.append({"role": "assistant", "content": text})
