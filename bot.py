@@ -1,16 +1,28 @@
 import requests  # Bibliothek für Netzwerk-Anfragen
 
-print("RashiBot(v2) ist bereit! Tippe 'exit' zum Beenden.")
+# Konstanten: feste Werte schreibt man GROSS
+MODELL = "llama3.2:1b"
+CHARAKTER = (
+    "Du bist RashiBot, ein freundlicher Assistent von Rashid. "
+    "Antworte immer auf Deutsch, kurz und einfach."
+)
 
-while True:  # Endlosschleife: läuft, bis wir 'break' sagen
+print("RashiBot ist bereit! Tippe 'exit' zum Beenden.")
+
+while True:
     frage = input("Du: ")
 
-    if frage.lower() == "exit":  # .lower() macht alles klein
+    if frage.lower() == "exit":
         print("Bot: Tschüss Rashid! 👋")
-        break  # Schleife beenden
+        break
 
     antwort = requests.post(
         "http://localhost:11434/api/generate",
-        json={"model": "llama3.2:1b", "prompt": frage, "stream": False},
+        json={
+            "model": MODELL,
+            "system": CHARAKTER,  # NEU: der Charakter des Bots
+            "prompt": frage,
+            "stream": False,
+        },
     )
     print("Bot:", antwort.json()["response"])
