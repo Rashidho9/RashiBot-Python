@@ -36,13 +36,26 @@ while True:
     # Deine Frage ins Gedächtnis schreiben
     verlauf.append({"role": "user", "content": frage})
 
-    antwort = requests.post(
-        "http://localhost:11434/api/chat",  # NEU: chat statt generate
-        json={"model": MODELL, "messages": verlauf, "stream": False},
-    )
-    text = antwort.json()["message"]["content"]  # NEU: anderer Pfad
+    try:  # NEU: "versuche das hier"
+        antwort = requests.post(
+            "http://localhost:11434/api/chat",
+            json={"model": MODELL, "messages": verlauf, "stream": False},
+            timeout=120,  # NEU: max. 120 Sekunden warten
+        )
+        antwort.raise_for_status()  # NEU: Fehler, wenn der Server meckert
+        text = antwort.json()["message"]["content"]
+    except requests.exceptions.ConnectionError:
+        print("Bot: ⚠️ Ollama läuft nicht. Starte Ollama und versuch es nochmal.")
+        verlauf.pop()  # Frage wieder entfernen, sie wurde nicht beantwortet
+        continue  # zurück an den Anfang der Schleife
+    except requests.exceptions.Timeout:
+        print("Bot: ⏳ Das hat zu lange gedauert. Versuch eine kürzere Frage.")
+        verlauf.pop()
+        continue
+    except Exception as fehler:  # alle anderen Fehler
+        print("Bot: ❌ Unbekannter Fehler:", fehler)
+        verlauf.pop()
+        continue
     print("Bot:", text)
-
-    # Antwort des Bots auch merken
     verlauf.append({"role": "assistant", "content": text})
     speichern(verlauf)
