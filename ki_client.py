@@ -26,8 +26,8 @@ class KiClient:
         antwort.raise_for_status()
         return antwort.json()["message"]["content"]
 
-    def frage_streamen(self, verlauf):
-        """Schickt den Verlauf und gibt die Antwort Stück für Stück aus."""
+    def frage_streamen(self, verlauf, bei_wort=None):
+        """Streamt die Antwort. bei_wort(wort) wird für jedes Stück aufgerufen."""
         antwort = requests.post(
             OLLAMA_URL,
             json={"model": self.modell, "messages": verlauf, "stream": True},
@@ -42,9 +42,13 @@ class KiClient:
                 continue
             stueck = json.loads(zeile)
             wort = stueck["message"]["content"]
-            print(wort, end="", flush=True)
+            if bei_wort:
+                bei_wort(wort)  # GUI: Wort ins Fenster
+            else:
+                print(wort, end="", flush=True)  # Terminal wie bisher
             ganzer_text += wort
             if stueck.get("done"):
                 break
-        print()
+        if not bei_wort:
+            print()
         return ganzer_text
