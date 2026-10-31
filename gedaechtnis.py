@@ -6,7 +6,7 @@ from config import CHARAKTER, DATEI
 
 
 class Gedaechtnis:
-    def __init__(self):  # Konstruktor (wie in Java)
+    def __init__(self):
         self.verlauf = self._laden()
 
     def _laden(self):
@@ -30,4 +30,4 @@ class Gedaechtnis:
         self.speichern()
 
     def anzahl(self):
-        return len(self.verlauf) - 1  # ohne System-Prompt
+        return len(self.verlauf) - 1

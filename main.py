@@ -42,7 +42,8 @@ def main():
 
         gedaechtnis.hinzufuegen("user", frage)
         try:
-            text = ki.frage_stellen(gedaechtnis.verlauf)
+            print("Bot: ", end="", flush=True)
+            text = ki.frage_streamen(gedaechtnis.verlauf)
         except requests.exceptions.ConnectionError:
             print("Bot: ⚠️ Ollama läuft nicht.")
             gedaechtnis.letzte_entfernen()
@@ -56,7 +57,6 @@ def main():
             gedaechtnis.letzte_entfernen()
             continue
 
-        print("Bot:", text)
         gedaechtnis.hinzufuegen("assistant", text)
         gedaechtnis.speichern()
 
