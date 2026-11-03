@@ -13,7 +13,17 @@ Keine Cloud, keine Kosten, die Daten bleiben auf dem eigenen PC.
 - 🛡️ Fehlerbehandlung, wenn Ollama nicht läuft
 - 🧪 Automatische Tests mit pytest
 
-## 🛠️ Installation
+## ⚡ Schnellstart per Doppelklick (Windows, ohne PyCharm)
+**Voraussetzungen:** [Python](https://www.python.org/downloads/) und [Ollama](https://ollama.com/download) sind installiert.
+
+1. Projekt herunterladen:
+   ```
+   git clone https://github.com/Rashidho9/RashiBot-Python.git
+   ```
+2. `installieren.bat` doppelklicken (nur einmal nötig)
+3. `starten.bat` doppelklicken → RashiBot startet 🚀
+
+## 🛠️ Installation (manuell)
 1. [Ollama](https://ollama.com/download) installieren
 2. Modelle laden:
    ```
@@ -65,6 +75,8 @@ ki_client.py         Klasse KiClient (Ollama, Streaming)
 pdf_wissen.py        Klasse PdfWissen (PDFs lesen und durchsuchen)
 gui.py               Klasse RashiBotGUI (Fenster)
 main.py              Terminal-Version
+installieren.bat     Installation per Doppelklick
+starten.bat          Start per Doppelklick
 test_gedaechtnis.py  Tests
 ```
 
